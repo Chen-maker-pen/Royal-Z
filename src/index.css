@@ -1,0 +1,261 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;700&family=Great+Vibes&family=Sacramento&family=Pacifico&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-royal-navy: #002147;
+  --color-royal-gold: #FFD700;
+  --color-royal-gold-light: #FFF2B2;
+  --color-royal-gold-dark: #CCA500;
+
+  /* Safe HEX color overrides to bypass html2canvas oklch parsing limitations */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #52525b;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
+
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+  --color-neutral-950: #0a0a0a;
+
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+  --color-red-950: #450a0a;
+
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+  --color-amber-950: #451a03;
+
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+  --color-emerald-800: #065f46;
+  --color-emerald-900: #064e3b;
+  --color-emerald-950: #022c22;
+
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+  --color-blue-950: #172554;
+}
+
+:root {
+  /* Enforce HEX mappings directly on :root to guarantee computed hex colors */
+  --color-slate-50: #f8fafc !important;
+  --color-slate-100: #f1f5f9 !important;
+  --color-slate-200: #e2e8f0 !important;
+  --color-slate-300: #cbd5e1 !important;
+  --color-slate-400: #94a3b8 !important;
+  --color-slate-500: #64748b !important;
+  --color-slate-600: #475569 !important;
+  --color-slate-700: #334155 !important;
+  --color-slate-800: #1e293b !important;
+  --color-slate-900: #0f172a !important;
+  --color-slate-950: #020617 !important;
+
+  --color-gray-50: #f9fafb !important;
+  --color-gray-100: #f3f4f6 !important;
+  --color-gray-200: #e5e7eb !important;
+  --color-gray-300: #d1d5db !important;
+  --color-gray-400: #9ca3af !important;
+  --color-gray-500: #6b7280 !important;
+  --color-gray-600: #4b5563 !important;
+  --color-gray-700: #374151 !important;
+  --color-gray-800: #1f2937 !important;
+  --color-gray-900: #111827 !important;
+  --color-gray-950: #030712 !important;
+
+  --color-zinc-50: #fafafa !important;
+  --color-zinc-100: #f4f4f5 !important;
+  --color-zinc-200: #e4e4e7 !important;
+  --color-zinc-300: #d4d4d8 !important;
+  --color-zinc-400: #a1a1aa !important;
+  --color-zinc-500: #71717a !important;
+  --color-zinc-600: #52525b !important;
+  --color-zinc-700: #3f3f46 !important;
+  --color-zinc-800: #27272a !important;
+  --color-zinc-900: #18181b !important;
+  --color-zinc-950: #09090b !important;
+
+  --color-neutral-50: #fafafa !important;
+  --color-neutral-100: #f5f5f5 !important;
+  --color-neutral-200: #e5e5e5 !important;
+  --color-neutral-300: #d4d4d4 !important;
+  --color-neutral-400: #a3a3a3 !important;
+  --color-neutral-500: #737373 !important;
+  --color-neutral-600: #525252 !important;
+  --color-neutral-700: #404040 !important;
+  --color-neutral-800: #262626 !important;
+  --color-neutral-900: #171717 !important;
+  --color-neutral-950: #0a0a0a !important;
+
+  --color-red-50: #fef2f2 !important;
+  --color-red-100: #fee2e2 !important;
+  --color-red-200: #fecaca !important;
+  --color-red-300: #fca5a5 !important;
+  --color-red-400: #f87171 !important;
+  --color-red-500: #ef4444 !important;
+  --color-red-600: #dc2626 !important;
+  --color-red-700: #b91c1c !important;
+  --color-red-800: #991b1b !important;
+  --color-red-900: #7f1d1d !important;
+  --color-red-950: #450a0a !important;
+
+  --color-amber-50: #fffbeb !important;
+  --color-amber-100: #fef3c7 !important;
+  --color-amber-200: #fde68a !important;
+  --color-amber-300: #fcd34d !important;
+  --color-amber-400: #fbbf24 !important;
+  --color-amber-500: #f59e0b !important;
+  --color-amber-600: #d97706 !important;
+  --color-amber-700: #b45309 !important;
+  --color-amber-800: #92400e !important;
+  --color-amber-900: #78350f !important;
+  --color-amber-950: #451a03 !important;
+
+  --color-emerald-50: #ecfdf5 !important;
+  --color-emerald-100: #d1fae5 !important;
+  --color-emerald-200: #a7f3d0 !important;
+  --color-emerald-300: #6ee7b7 !important;
+  --color-emerald-400: #34d399 !important;
+  --color-emerald-500: #10b981 !important;
+  --color-emerald-600: #059669 !important;
+  --color-emerald-700: #047857 !important;
+  --color-emerald-800: #065f46 !important;
+  --color-emerald-900: #064e3b !important;
+  --color-emerald-950: #022c22 !important;
+
+  --color-blue-50: #eff6ff !important;
+  --color-blue-100: #dbeafe !important;
+  --color-blue-200: #bfdbfe !important;
+  --color-blue-300: #93c5fd !important;
+  --color-blue-400: #60a5fa !important;
+  --color-blue-500: #3b82f6 !important;
+  --color-blue-600: #2563eb !important;
+  --color-blue-700: #1d4ed8 !important;
+  --color-blue-800: #1e40af !important;
+  --color-blue-900: #1e3a8a !important;
+  --color-blue-950: #172554 !important;
+}
+
+/* Custom CSS for signature pads and borders */
+@media print {
+  html, body {
+    background-color: white !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+  }
+  /* Hide all elements on page except printable-invoice-paper */
+  body * {
+    visibility: hidden;
+  }
+  #printable-invoice-paper, #printable-invoice-paper * {
+    visibility: visible;
+  }
+  #printable-invoice-paper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-width: 210mm !important;
+    padding: 12mm 15mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: white !important;
+  }
+  /* Force input borders and backgrounds to remain clean when printing */
+  input, select, textarea {
+    border-bottom: 1px solid #94a3b8 !important;
+    background-color: transparent !important;
+    color: #000000 !important;
+  }
+  .print-border-b {
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+}
+
+.signature-canvas {
+  touch-action: none;
+}
+
+/* Hide arrow spinner in number input */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
