@@ -16,10 +16,100 @@ import {
   Layers,
   Sparkles,
   Printer,
-  Share2
+  Share2,
+  History,
+  Save,
+  PlusCircle,
+  FilePlus,
+  Columns,
+  CheckCircle2
 } from "lucide-react";
-import { InvoiceItem } from "./types";
+import { InvoiceItem, TableColumn, SavedInvoice } from "./types";
 import { SignaturePad } from "./components/SignaturePad";
+import { SpreadsheetTable } from "./components/SpreadsheetTable";
+import { AddColumnModal } from "./components/AddColumnModal";
+import { InvoiceHistoryModal } from "./components/InvoiceHistoryModal";
+
+const DEFAULT_COLUMNS: TableColumn[] = [
+  { id: 'no', label: 'NO', type: 'number', align: 'center', width: 'w-10' },
+  { id: 'bu', label: 'BU', type: 'text', align: 'center', width: 'w-16' },
+  { id: 'description', label: 'DESCRIPTION', type: 'text', align: 'left', width: 'min-w-[180px]' },
+  { id: 'partNo', label: 'PART NO', type: 'text', align: 'center', width: 'w-28' },
+  { id: 'qty', label: 'QTY', type: 'number', align: 'center', width: 'w-14' },
+  { id: 'price', label: 'PRICE/UNIT', type: 'number', align: 'right', width: 'w-28' },
+  { id: 'total', label: 'TOTAL AMT', type: 'number', align: 'right', width: 'w-32' },
+  { id: 'remark', label: 'REMARK', type: 'text', align: 'left', width: 'w-28' },
+];
+
+const DEFAULT_SAVED_INVOICES: SavedInvoice[] = [
+  {
+    id: "inv-record-1082",
+    savedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+    header: {
+      voucherNo: "VOU-4029",
+      invoiceNo: "RZ-2025-1082",
+      date: new Date(Date.now() - 3600000 * 24).toISOString().split("T")[0],
+      salesman: "Ko Aung Kyaw",
+      currency: "MMK",
+      saleType: "Cash"
+    },
+    customer: {
+      customerName: "U Min Min Thant",
+      contactPerson: "Daw Hla Hla",
+      companyName: "Myanmar Engineering & Construction Co., Ltd",
+      nrcNo: "12/LAKANA(N)098234",
+      address: "No. 128, Pyay Road, Kamayut Township, Yangon",
+      phone: "+95 9 4500 12345"
+    },
+    items: [
+      { id: "item-d1", no: 1, bu: "CE-1", description: "Engine Overhaul & Hydraulic Cylinder Seal Kit", partNo: "HYD-882-99", qty: 2, price: 450000, total: 900000, remark: "Original OEM" },
+      { id: "item-d2", no: 2, bu: "CE-2", description: "High-Pressure Oil Filter & Fuel Separator", partNo: "FLT-440-X", qty: 4, price: 85000, total: 340000, remark: "Standard OEM" },
+      { id: "item-d3", no: 3, bu: "CE-3", description: "Diagnostic Calibration & Service Labor", partNo: "SRV-CAL-01", qty: 1, price: 250000, total: 250000, remark: "Certified" }
+    ],
+    columns: DEFAULT_COLUMNS,
+    grandTotal: 1490000,
+    signatures: {
+      preparedBy: "",
+      checkedBy: "",
+      approvedBy: "",
+      customerBy: ""
+    }
+  },
+  {
+    id: "inv-record-0955",
+    savedAt: new Date(Date.now() - 3600000 * 72).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 72).toISOString(),
+    header: {
+      voucherNo: "VOU-3810",
+      invoiceNo: "RZ-2025-0955",
+      date: new Date(Date.now() - 3600000 * 72).toISOString().split("T")[0],
+      salesman: "Ma Su Mon",
+      currency: "MMK",
+      saleType: "Credit"
+    },
+    customer: {
+      customerName: "Daw Khin Mar Lar",
+      contactPerson: "U Kyaw Myint",
+      companyName: "Golden Logistics & Heavy Transport Co.",
+      nrcNo: "12/KAMAYA(N)114422",
+      address: "Industrial Zone (1), Hlaing Tharyar, Yangon",
+      phone: "+95 9 7900 67890"
+    },
+    items: [
+      { id: "item-d4", no: 1, bu: "FL-1", description: "Heavy Duty Brake Disc & Pad Assembly", partNo: "BRK-990", qty: 4, price: 180000, total: 720000, remark: "Warranty 6 mo" },
+      { id: "item-d5", no: 2, bu: "FL-2", description: "Synthetic Transmission Fluid (20L Drum)", partNo: "OIL-SYN-20L", qty: 3, price: 135000, total: 405000, remark: "Grade A" }
+    ],
+    columns: DEFAULT_COLUMNS,
+    grandTotal: 1125000,
+    signatures: {
+      preparedBy: "",
+      checkedBy: "",
+      approvedBy: "",
+      customerBy: ""
+    }
+  }
+];
 
 export default function App() {
   // 1. Core States
@@ -52,6 +142,35 @@ export default function App() {
     customerBy: ""
   });
 
+  // Table Columns (Spreadsheet customization)
+  const [columns, setColumns] = useState<TableColumn[]>(() => {
+    const saved = localStorage.getItem("royal_z_columns");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return DEFAULT_COLUMNS;
+  });
+
+  // Invoice History states
+  const [savedInvoices, setSavedInvoices] = useState<SavedInvoice[]>(() => {
+    const saved = localStorage.getItem("royal_z_invoice_history");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return DEFAULT_SAVED_INVOICES;
+  });
+  const [currentInvoiceId, setCurrentInvoiceId] = useState<string | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isAddColumnModalOpen, setIsAddColumnModalOpen] = useState(false);
+  const [addColumnInsertIndex, setAddColumnInsertIndex] = useState<number | undefined>(undefined);
+  const [saveNotification, setSaveNotification] = useState<string | null>(null);
+
   // 2. Integration & UI States
   const [isExporting, setIsExporting] = useState(false);
   const [logoError, setLogoError] = useState(false);
@@ -79,13 +198,10 @@ export default function App() {
     }
   };
 
-  // 3. Auto-populate numbers & date
+  // 3. Auto-populate initial numbers & date
   useEffect(() => {
-    // Generate dates
     const today = new Date();
     const formattedDate = today.toISOString().split("T")[0];
-    
-    // Auto invoice & voucher number
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const generatedInvoiceNo = `RZ-${today.getFullYear()}-${randomSuffix}`;
     const generatedVoucherNo = `VOU-${randomSuffix}`;
@@ -100,7 +216,33 @@ export default function App() {
     });
   }, []);
 
-  // 4. Calculations
+  // Auto-save active draft to localStorage
+  useEffect(() => {
+    const draftData = {
+      header,
+      customer,
+      items,
+      columns,
+      signatures,
+      currentInvoiceId
+    };
+    try {
+      localStorage.setItem("royal_z_active_draft", JSON.stringify(draftData));
+    } catch (e) {}
+  }, [header, customer, items, columns, signatures, currentInvoiceId]);
+
+  // 4. Spreadsheet Calculations
+  const computeRowTotal = (qty: number, price: number, customFields?: Record<string, string | number>) => {
+    const base = qty * price;
+    // Automatic discount formula support if user adds a Discount column!
+    const discountCol = columns.find(c => c.isCustom && c.label.toLowerCase().includes("discount"));
+    if (discountCol && customFields?.[discountCol.id] !== undefined) {
+      const disc = parseFloat(String(customFields[discountCol.id])) || 0;
+      return Math.max(0, Math.round(base * (1 - disc / 100)));
+    }
+    return base;
+  };
+
   const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
 
   const handleItemChange = (id: string, field: keyof InvoiceItem, value: any) => {
@@ -111,7 +253,7 @@ export default function App() {
           if (field === "qty" || field === "price") {
             const qty = field === "qty" ? Number(value) : item.qty;
             const price = field === "price" ? Number(value) : item.price;
-            updatedItem.total = qty * price;
+            updatedItem.total = computeRowTotal(qty, price, item.customFields);
           }
           return updatedItem;
         }
@@ -120,65 +262,289 @@ export default function App() {
     );
   };
 
+  const handleCustomFieldChange = (id: string, colId: string, value: any) => {
+    setItems(prevItems =>
+      prevItems.map(item => {
+        if (item.id === id) {
+          const updatedCustomFields = { ...(item.customFields || {}), [colId]: value };
+          const updatedItem = { ...item, customFields: updatedCustomFields };
+          // If editing a discount column, recalculate total
+          const col = columns.find(c => c.id === colId);
+          if (col && col.label.toLowerCase().includes("discount")) {
+            updatedItem.total = computeRowTotal(item.qty, item.price, updatedCustomFields);
+          }
+          return updatedItem;
+        }
+        return item;
+      })
+    );
+  };
+
+  // Row spreadsheet operations
   const handleAddRow = () => {
     const nextNo = items.length + 1;
-    const nextId = `item-${Date.now()}`;
+    const nextId = `item-${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
     setItems([
       ...items,
       { id: nextId, no: nextNo, bu: "", description: "", partNo: "", qty: 1, price: 0, total: 0, remark: "" }
     ]);
   };
 
+  const handleInsertRow = (index: number) => {
+    const nextId = `item-${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const newRow: InvoiceItem = {
+      id: nextId,
+      no: index + 2,
+      bu: "",
+      description: "",
+      partNo: "",
+      qty: 1,
+      price: 0,
+      total: 0,
+      remark: ""
+    };
+    const updated = [...items];
+    updated.splice(index + 1, 0, newRow);
+    // Recalculate sequence numbers
+    const sequenced = updated.map((item, idx) => ({ ...item, no: idx + 1 }));
+    setItems(sequenced);
+  };
+
+  const handleDuplicateRow = (index: number) => {
+    const target = items[index];
+    const nextId = `item-${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const duplicatedRow: InvoiceItem = {
+      ...target,
+      id: nextId,
+      no: index + 2,
+      customFields: target.customFields ? { ...target.customFields } : undefined
+    };
+    const updated = [...items];
+    updated.splice(index + 1, 0, duplicatedRow);
+    const sequenced = updated.map((item, idx) => ({ ...item, no: idx + 1 }));
+    setItems(sequenced);
+  };
+
+  const handleMoveRow = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === items.length - 1) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const updated = [...items];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, moved);
+    const sequenced = updated.map((item, idx) => ({ ...item, no: idx + 1 }));
+    setItems(sequenced);
+  };
+
   const handleRemoveRow = (id: string) => {
     if (items.length <= 1) return;
     const filtered = items.filter(item => item.id !== id);
-    // Recalculate row sequence numbers
-    const updated = filtered.map((item, index) => ({
+    const sequenced = filtered.map((item, index) => ({
       ...item,
       no: index + 1
     }));
-    setItems(updated);
+    setItems(sequenced);
   };
 
-  // 5. Clear whole form
-  const handleResetForm = () => {
-    if (window.confirm("Are you sure you want to clear the entire invoice? This will reset all fields and signature drawings.")) {
-      const today = new Date();
-      const formattedDate = today.toISOString().split("T")[0];
-      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+  // Column operations
+  const handleAddColumn = (newCol: TableColumn, insertIndex?: number) => {
+    let updated: TableColumn[];
+    if (typeof insertIndex === 'number' && insertIndex >= 0 && insertIndex <= columns.length) {
+      updated = [...columns.slice(0, insertIndex), newCol, ...columns.slice(insertIndex)];
+    } else {
+      updated = [...columns, newCol];
+    }
+    setColumns(updated);
+    localStorage.setItem("royal_z_columns", JSON.stringify(updated));
+    setSaveNotification(`Added column "${newCol.label}"`);
+    setTimeout(() => setSaveNotification(null), 3000);
+  };
 
-      setHeader({
-        voucherNo: `VOU-${randomSuffix}`,
-        invoiceNo: `RZ-${today.getFullYear()}-${randomSuffix}`,
-        date: formattedDate,
-        salesman: "",
-        currency: "MMK",
-        saleType: "Cash"
-      });
+  const handleRemoveColumn = (colId: string) => {
+    const updated = columns.filter(c => c.id !== colId);
+    setColumns(updated);
+    localStorage.setItem("royal_z_columns", JSON.stringify(updated));
+  };
 
-      setCustomer({
-        customerName: "",
-        contactPerson: "",
-        companyName: "",
-        nrcNo: "",
-        address: "",
-        phone: ""
-      });
+  const handleRenameColumn = (colId: string, newLabel: string) => {
+    const updated = columns.map(c => c.id === colId ? { ...c, label: newLabel } : c);
+    setColumns(updated);
+    localStorage.setItem("royal_z_columns", JSON.stringify(updated));
+  };
 
-      setItems([
-        { id: `item-${Date.now()}`, no: 1, bu: "", description: "", partNo: "", qty: 1, price: 0, total: 0, remark: "" }
-      ]);
+  // 5. Invoice History & Persistence Operations
+  const handleSaveInvoice = () => {
+    const now = new Date().toISOString();
+    let targetId = currentInvoiceId;
+    let isNew = false;
+    
+    if (!targetId) {
+      targetId = `inv_${Date.now()}`;
+      setCurrentInvoiceId(targetId);
+      isNew = true;
+    }
 
-      setSignatures({
-        preparedBy: "",
-        checkedBy: "",
-        approvedBy: "",
-        customerBy: ""
-      });
+    const invoiceRecord: SavedInvoice = {
+      id: targetId,
+      savedAt: isNew ? now : (savedInvoices.find(i => i.id === targetId)?.savedAt || now),
+      updatedAt: now,
+      header,
+      customer,
+      items,
+      columns,
+      grandTotal,
+      signatures,
+      customShareText
+    };
 
-      setCustomShareText(null);
+    setSavedInvoices(prev => {
+      const existsIndex = prev.findIndex(i => i.id === targetId);
+      let updated: SavedInvoice[];
+      if (existsIndex >= 0) {
+        updated = [...prev];
+        updated[existsIndex] = invoiceRecord;
+      } else {
+        updated = [invoiceRecord, ...prev];
+      }
+      localStorage.setItem("royal_z_invoice_history", JSON.stringify(updated));
+      return updated;
+    });
+
+    setSaveNotification(`Invoice ${header.invoiceNo || 'Draft'} saved to history!`);
+    setTimeout(() => setSaveNotification(null), 3500);
+  };
+
+  const handleLoadInvoice = (inv: SavedInvoice) => {
+    setCurrentInvoiceId(inv.id);
+    setHeader(inv.header);
+    setCustomer(inv.customer);
+    setItems(inv.items);
+    if (inv.columns && inv.columns.length > 0) {
+      setColumns(inv.columns);
+      localStorage.setItem("royal_z_columns", JSON.stringify(inv.columns));
+    }
+    if (inv.signatures) {
+      setSignatures(inv.signatures);
+    }
+    if (inv.customShareText !== undefined) {
+      setCustomShareText(inv.customShareText);
+    }
+    setSaveNotification(`Loaded ${inv.header.invoiceNo || 'invoice'} for re-editing.`);
+    setTimeout(() => setSaveNotification(null), 3500);
+  };
+
+  const handleDuplicateInvoice = (inv: SavedInvoice) => {
+    const today = new Date();
+    const formattedDate = today.toISOString().split("T")[0];
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const newInvoiceNo = `RZ-${today.getFullYear()}-${randomSuffix}`;
+    const newVoucherNo = `VOU-${randomSuffix}`;
+
+    const duplicatedRecord: SavedInvoice = {
+      ...inv,
+      id: `inv_${Date.now()}`,
+      savedAt: today.toISOString(),
+      updatedAt: today.toISOString(),
+      header: {
+        ...inv.header,
+        invoiceNo: newInvoiceNo,
+        voucherNo: newVoucherNo,
+        date: formattedDate
+      },
+    };
+
+    setSavedInvoices(prev => {
+      const updated = [duplicatedRecord, ...prev];
+      localStorage.setItem("royal_z_invoice_history", JSON.stringify(updated));
+      return updated;
+    });
+
+    setSaveNotification(`Duplicated invoice as ${newInvoiceNo}!`);
+    setTimeout(() => setSaveNotification(null), 3500);
+  };
+
+  const handleDeleteInvoice = (id: string) => {
+    setSavedInvoices(prev => {
+      const updated = prev.filter(i => i.id !== id);
+      localStorage.setItem("royal_z_invoice_history", JSON.stringify(updated));
+      return updated;
+    });
+    if (currentInvoiceId === id) {
+      setCurrentInvoiceId(null);
     }
   };
+
+  const handleNewInvoice = () => {
+    const today = new Date();
+    const formattedDate = today.toISOString().split("T")[0];
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+
+    setCurrentInvoiceId(null);
+    setHeader({
+      voucherNo: `VOU-${randomSuffix}`,
+      invoiceNo: `RZ-${today.getFullYear()}-${randomSuffix}`,
+      date: formattedDate,
+      salesman: "",
+      currency: "MMK",
+      saleType: "Cash"
+    });
+
+    setCustomer({
+      customerName: "",
+      contactPerson: "",
+      companyName: "",
+      nrcNo: "",
+      address: "",
+      phone: ""
+    });
+
+    setItems([
+      { id: `item-${Date.now()}`, no: 1, bu: "", description: "", partNo: "", qty: 1, price: 0, total: 0, remark: "" }
+    ]);
+
+    setSignatures({
+      preparedBy: "",
+      checkedBy: "",
+      approvedBy: "",
+      customerBy: ""
+    });
+
+    setCustomShareText(null);
+    setSaveNotification("Started new blank invoice.");
+    setTimeout(() => setSaveNotification(null), 3000);
+  };
+
+  const handleExportHistory = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedInvoices, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `Royal_Z_Invoices_Backup_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleImportHistory = (imported: SavedInvoice[]) => {
+    setSavedInvoices(prev => {
+      // Merge unique by ID
+      const map = new Map<string, SavedInvoice>();
+      prev.forEach(i => map.set(i.id, i));
+      imported.forEach(i => map.set(i.id, i));
+      const combined = Array.from(map.values());
+      localStorage.setItem("royal_z_invoice_history", JSON.stringify(combined));
+      return combined;
+    });
+    setSaveNotification(`Successfully imported ${imported.length} invoices!`);
+    setTimeout(() => setSaveNotification(null), 3500);
+  };
+
+  // 6. Reset form
+  const handleResetForm = () => {
+    if (window.confirm("Are you sure you want to clear this invoice form?")) {
+      handleNewInvoice();
+    }
+  };
+
 
   // 8. PDF Download Handler using html2pdf.js
   const handleDownloadPDF = async () => {
@@ -545,7 +911,7 @@ _Thank you for your valuable business with Royal Z!_`;
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
       {/* Top Banner (Header) */}
-      <header className="bg-royal-navy text-white py-4 px-6 shadow-md border-b-2 border-royal-gold no-print">
+      <header className="bg-royal-navy text-white py-3.5 px-6 shadow-md border-b-2 border-royal-gold no-print">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-royal-navy border border-royal-gold flex items-center justify-center text-royal-gold font-bold text-lg">
@@ -559,14 +925,55 @@ _Thank you for your valuable business with Royal Z!_`;
             </div>
           </div>
           
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-right">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Save to History Button */}
+            <button
+              onClick={handleSaveInvoice}
+              className="bg-royal-gold hover:bg-amber-400 text-royal-navy font-bold text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+              title="Save current invoice into History"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Save Invoice</span>
+            </button>
+
+            {/* History Modal Trigger with Count Badge */}
+            <button
+              onClick={() => setIsHistoryModalOpen(true)}
+              className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-2 shadow-sm cursor-pointer"
+              title="View saved invoices history"
+            >
+              <History className="w-3.5 h-3.5 text-royal-gold" />
+              <span>History</span>
+              <span className="bg-royal-gold text-royal-navy text-[10px] px-1.5 py-0.2 rounded-full font-black">
+                {savedInvoices.length}
+              </span>
+            </button>
+
+            {/* New Blank Invoice Button */}
+            <button
+              onClick={handleNewInvoice}
+              className="bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+              title="Start a new blank invoice"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">New Invoice</span>
+            </button>
+
+            <div className="bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-right hidden lg:block">
               <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Current Session</span>
               <span className="text-xs font-semibold text-royal-gold font-mono">{header.date || new Date().toLocaleDateString()}</span>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Notification Toast Banner */}
+      {saveNotification && (
+        <div className="bg-emerald-600 text-white px-4 py-2 text-center text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all no-print">
+          <CheckCircle2 className="w-4 h-4 text-emerald-100" />
+          <span>{saveNotification}</span>
+        </div>
+      )}
 
       {/* Main Layout Grid */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -855,142 +1262,29 @@ _Thank you for your valuable business with Royal Z!_`;
 
               </div>
 
-              {/* BENTO SERVICES TABLE CONTAINER */}
-              <div className="col-span-12 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col mt-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[800px]">
-                    <thead className="bg-royal-navy text-white">
-                      <tr className="text-[11px] uppercase tracking-wider font-bold">
-                        <th className="px-3 py-3 w-10 text-center">No</th>
-                        <th className="px-3 py-3 w-16 text-center">BU</th>
-                        <th className="px-3 py-3 min-w-[200px]">Description</th>
-                        <th className="px-3 py-3 w-28 text-center font-medium">Part No</th>
-                        <th className="px-3 py-3 w-14 text-center">Qty</th>
-                        <th className="px-3 py-3 w-28 text-right">Price/Unit</th>
-                        <th className="px-3 py-3 w-32 text-right">Total Amt</th>
-                        <th className="px-3 py-3 w-28 text-left">Remark</th>
-                        <th className="px-3 py-3 w-10 text-center no-print"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-sm">
-                      {items.map((item, index) => (
-                        <tr key={item.id} className="hover:bg-slate-50/80 group">
-                          <td className="px-3 py-3 text-slate-400 text-center font-medium">{String(item.no).padStart(2, '0')}</td>
-                          <td className="px-3 py-3">
-                            {isExporting ? (
-                              <div className="w-full text-xs text-center uppercase font-bold text-royal-navy py-1">{item.bu || ""}</div>
-                            ) : (
-                              <input
-                                type="text"
-                                placeholder="e.g. CE-3"
-                                value={item.bu || ""}
-                                onChange={(e) => handleItemChange(item.id, "bu", e.target.value)}
-                                className="w-full bg-transparent focus:outline-none text-slate-800 border-b border-transparent focus:border-slate-300 py-0.5 text-xs text-center uppercase font-bold text-royal-navy"
-                              />
-                            )}
-                          </td>
-                          <td className="px-3 py-3">
-                            {isExporting ? (
-                              <div className="w-full text-xs font-semibold text-slate-800 whitespace-pre-wrap py-1 leading-relaxed">{item.description || ""}</div>
-                            ) : (
-                              <textarea
-                                placeholder="Describe product or service..."
-                                rows={2}
-                                value={item.description}
-                                onChange={(e) => handleItemChange(item.id, "description", e.target.value)}
-                                className="w-full bg-transparent focus:outline-none text-slate-800 border-b border-transparent focus:border-slate-300 py-0.5 text-xs font-semibold resize-none"
-                              />
-                            )}
-                          </td>
-                          <td className="px-3 py-3">
-                            {isExporting ? (
-                              <div className="w-full text-xs text-center font-medium text-slate-600 py-1">{item.partNo || ""}</div>
-                            ) : (
-                              <input
-                                type="text"
-                                placeholder="e.g. ME-210"
-                                value={item.partNo || ""}
-                                onChange={(e) => handleItemChange(item.id, "partNo", e.target.value)}
-                                className="w-full bg-transparent focus:outline-none text-slate-800 border-b border-transparent focus:border-slate-300 py-0.5 text-xs text-center font-medium text-slate-600"
-                              />
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            {isExporting ? (
-                              <div className="w-full text-center font-bold text-xs text-slate-800 py-1">{item.qty}</div>
-                            ) : (
-                              <input
-                                type="number"
-                                min="1"
-                                value={item.qty}
-                                onChange={(e) => handleItemChange(item.id, "qty", e.target.value)}
-                                className="w-full text-center bg-transparent focus:outline-none text-slate-800 border-b border-transparent focus:border-slate-300 py-0.5 font-bold text-xs"
-                              />
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-right">
-                            {isExporting ? (
-                              <div className="w-full text-right font-bold text-xs text-slate-800 py-1">{item.price === 0 ? "0" : item.price.toLocaleString()}</div>
-                            ) : (
-                              <input
-                                type="number"
-                                min="0"
-                                placeholder="0"
-                                value={item.price === 0 ? "" : item.price}
-                                onChange={(e) => handleItemChange(item.id, "price", e.target.value)}
-                                className="w-full text-right bg-transparent focus:outline-none text-slate-800 border-b border-transparent focus:border-slate-300 py-0.5 font-bold text-xs"
-                              />
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-right font-black text-slate-800 text-xs">
-                            {item.total.toLocaleString()}
-                          </td>
-                          <td className="px-3 py-3">
-                            {isExporting ? (
-                              <div className="w-full text-xs text-slate-600 py-1">{item.remark || ""}</div>
-                            ) : (
-                              <input
-                                type="text"
-                                placeholder="Optional Remark"
-                                value={item.remark || ""}
-                                onChange={(e) => handleItemChange(item.id, "remark", e.target.value)}
-                                className="w-full bg-transparent focus:outline-none text-slate-800 border-b border-transparent focus:border-slate-300 py-0.5 text-xs text-slate-600"
-                              />
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-center no-print">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveRow(item.id)}
-                              disabled={items.length <= 1}
-                              className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition disabled:opacity-30"
-                              title="Delete Row"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Footer of services bento box */}
-                <div className="mt-auto border-t-2 border-slate-100 bg-slate-50 p-4 flex justify-between items-center rounded-b-xl">
-                  <button
-                    type="button"
-                    onClick={handleAddRow}
-                    className="text-royal-navy text-xs font-bold uppercase hover:underline flex items-center gap-1.5 no-print"
-                  >
-                    <Plus className="w-4 h-4 text-royal-gold-dark" />
-                    + Add Service Row
-                  </button>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Grand Total ({header.currency})</span>
-                    <span className="text-2xl font-black text-royal-navy">{grandTotal.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
+              {/* SPREADSHEET / EXCEL-STYLE DYNAMIC TABLE */}
+              <SpreadsheetTable
+                items={items}
+                columns={columns}
+                currency={header.currency}
+                grandTotal={grandTotal}
+                isExporting={isExporting}
+                onItemChange={handleItemChange}
+                onCustomFieldChange={handleCustomFieldChange}
+                onAddRow={handleAddRow}
+                onInsertRow={handleInsertRow}
+                onDuplicateRow={handleDuplicateRow}
+                onMoveRow={handleMoveRow}
+                onRemoveRow={handleRemoveRow}
+                onOpenAddColumnModal={(insertIdx?: number) => {
+                  setAddColumnInsertIndex(insertIdx);
+                  setIsAddColumnModalOpen(true);
+                }}
+                onRemoveColumn={handleRemoveColumn}
+                onRenameColumn={handleRenameColumn}
+                onOpenHistory={() => setIsHistoryModalOpen(true)}
+                historyCount={savedInvoices.length}
+              />
             </div>
 
             {/* BENTO SIGNATURE BOX ROW */}
@@ -1043,11 +1337,44 @@ _Thank you for your valuable business with Royal Z!_`;
             </h3>
             
             <div className="space-y-3">
+              {/* Save & History Primary Actions */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleSaveInvoice}
+                  className="bg-royal-gold hover:bg-amber-400 text-royal-navy font-bold text-xs py-2.5 px-3 rounded-lg transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Save current invoice to history"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  Save Draft
+                </button>
+
+                <button
+                  onClick={() => setIsHistoryModalOpen(true)}
+                  className="bg-royal-navy hover:bg-slate-900 text-white font-bold text-xs py-2.5 px-3 rounded-lg transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Open invoice history and re-edit"
+                >
+                  <History className="w-3.5 h-3.5 text-royal-gold" />
+                  History ({savedInvoices.length})
+                </button>
+              </div>
+
+              {/* Add Custom Column Button */}
+              <button
+                onClick={() => setIsAddColumnModalOpen(true)}
+                className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 hover:border-slate-300 font-semibold text-xs py-2.5 px-3 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                title="Add a custom column to the table"
+              >
+                <Columns className="w-3.5 h-3.5 text-royal-navy" />
+                Add Custom Column / Field
+              </button>
+
+              <div className="h-px bg-slate-100 my-1"></div>
+
               {/* PDF Download Button */}
               <button
                 onClick={handleDownloadPDF}
                 disabled={isExporting}
-                className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs py-3 px-4 rounded-lg transition shadow flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs py-3 px-4 rounded-lg transition shadow flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 <Download className="w-4 h-4 text-royal-gold" />
                 {isExporting ? "Generating PDF..." : "Download PDF (html2pdf)"}
@@ -1056,7 +1383,7 @@ _Thank you for your valuable business with Royal Z!_`;
               {/* Native Print / Save as PDF Button */}
               <button
                 onClick={() => window.print()}
-                className="w-full bg-royal-navy hover:bg-slate-900 text-white font-bold text-xs py-3 px-4 rounded-lg transition shadow flex items-center justify-center gap-2 border border-slate-800"
+                className="w-full bg-royal-navy hover:bg-slate-900 text-white font-bold text-xs py-3 px-4 rounded-lg transition shadow flex items-center justify-center gap-2 border border-slate-800 cursor-pointer"
               >
                 <Printer className="w-4 h-4 text-royal-gold" />
                 Print / Save as PDF (Recommended)
@@ -1068,16 +1395,26 @@ _Thank you for your valuable business with Royal Z!_`;
                 Preview frames can sometimes block automatic PDF file downloads. If the download fails, click <b>Print / Save as PDF</b> and select <b>"Save as PDF"</b> as your destination for a perfect crisp document.
               </div>
 
-              <div className="h-px bg-slate-100 my-4"></div>
+              <div className="h-px bg-slate-100 my-2"></div>
 
-              {/* Reset / Clear Button */}
-              <button
-                onClick={handleResetForm}
-                className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 font-medium text-xs py-2 px-4 rounded-lg transition flex items-center justify-center gap-1.5"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Reset Invoice Fields
-              </button>
+              {/* Reset / New Invoice Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleNewInvoice}
+                  className="flex-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 font-medium text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <FilePlus className="w-3.5 h-3.5 text-royal-gold-dark" />
+                  New Blank
+                </button>
+                <button
+                  onClick={handleResetForm}
+                  className="bg-white hover:bg-slate-50 text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 font-medium text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1 cursor-pointer"
+                  title="Reset all fields"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Reset
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1247,14 +1584,44 @@ _Thank you for your valuable business with Royal Z!_`;
             <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
               <li>Input fields are borderless lines, giving it a physical paper form appearance.</li>
               <li>Row totals and the <b>Grand Total</b> calculate dynamically as you type quantities or prices.</li>
-              <li>Sign using your mouse on laptop/desktop or finger on a touchscreen phone.</li>
-              <li>Click <b>Download High-Quality PDF</b> to convert the invoice to a perfectly sized A4 printout. All controls and buttons will be cleanly hidden automatically.</li>
+              <li><b>Excel / Google Sheet Features:</b> Press <kbd className="bg-slate-100 px-1 py-0.5 rounded text-[10px] font-mono">Enter</kbd> to move down, <kbd className="bg-slate-100 px-1 py-0.5 rounded text-[10px] font-mono">Tab</kbd> to move right, or use arrow keys. Insert, duplicate, and reorder rows with the row menu.</li>
+              <li>Click <b>+ Add Custom Column</b> to insert extra columns (like Discount %, Warranty, Batch No).</li>
+              <li>All invoices can be saved into <b>History</b> to reload, duplicate, or re-edit anytime!</li>
+              <li>Click <b>Download High-Quality PDF</b> to convert the invoice to a perfectly sized A4 printout.</li>
             </ul>
           </div>
 
         </div>
 
       </main>
+
+      {/* Add Custom Column Modal */}
+      <AddColumnModal
+        isOpen={isAddColumnModalOpen}
+        onClose={() => {
+          setIsAddColumnModalOpen(false);
+          setAddColumnInsertIndex(undefined);
+        }}
+        onAddColumn={handleAddColumn}
+        existingColumns={columns}
+        insertIndex={addColumnInsertIndex}
+      />
+
+      {/* Invoice History & Re-edit Modal */}
+      <InvoiceHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        savedInvoices={savedInvoices}
+        invoices={savedInvoices}
+        currentInvoiceId={currentInvoiceId}
+        onLoadInvoice={handleLoadInvoice}
+        onDuplicateInvoice={handleDuplicateInvoice}
+        onDeleteInvoice={handleDeleteInvoice}
+        onNewInvoice={handleNewInvoice}
+        onExportHistory={handleExportHistory}
+        onImportHistory={handleImportHistory}
+        onSaveCurrentInvoice={handleSaveInvoice}
+      />
     </div>
   );
 }

@@ -1,3 +1,12 @@
+export interface TableColumn {
+  id: string;
+  label: string;
+  type: 'text' | 'number';
+  align: 'left' | 'center' | 'right';
+  width?: string;
+  isCustom?: boolean;
+}
+
 export interface InvoiceItem {
   id: string;
   no: number;
@@ -8,6 +17,7 @@ export interface InvoiceItem {
   price: number;
   total: number;
   remark: string;
+  customFields?: Record<string, string | number>;
 }
 
 export interface CustomerInfo {
@@ -29,9 +39,11 @@ export interface InvoiceHeader {
 }
 
 export interface InvoiceData {
+  id?: string;
   header: InvoiceHeader;
   customer: CustomerInfo;
   items: InvoiceItem[];
+  columns?: TableColumn[];
   grandTotal: number;
   signatures: {
     preparedBy: string; // base64
@@ -39,6 +51,24 @@ export interface InvoiceData {
     approvedBy: string; // base64
     customerBy: string; // base64
   };
+}
+
+export interface SavedInvoice {
+  id: string;
+  savedAt: string;
+  updatedAt: string;
+  header: InvoiceHeader;
+  customer: CustomerInfo;
+  items: InvoiceItem[];
+  columns: TableColumn[];
+  grandTotal: number;
+  signatures: {
+    preparedBy: string;
+    checkedBy: string;
+    approvedBy: string;
+    customerBy: string;
+  };
+  customShareText?: string | null;
 }
 
 export interface SpreadsheetRecord {
